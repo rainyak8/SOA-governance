@@ -1,6 +1,8 @@
 package cn.rainyak.middleware.SOA.config;
+import cn.rainyak.middleware.SOA.aop.DoJoinPoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,5 +16,10 @@ public class WhiteListAutoConfigure {
     @ConditionalOnMissingBean
     public String whiteListConfig(WhiteListProperties properties) {
         return properties.getUsers();
+    }
+    @Bean
+    @ConditionalOnMissingBean
+    public DoJoinPoint doJoinPoint() {
+        return new DoJoinPoint();
     }
 }

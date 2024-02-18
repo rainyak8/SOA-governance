@@ -9,6 +9,8 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +23,10 @@ import java.lang.reflect.Method;
 这里的调用可以和熔断保护联想起来，也就是这些服务可以统一包装在一起。
  */
 @Aspect
-@Component//定义切面、定义组件以求被实例化、定义切点
+@Component
 @Order(1)
 public class DoRateLimiterPoint {
+    private Logger logger = LoggerFactory.getLogger(DoMethodExtPoint.class);//日志
     /*
     @Pointcut("@annotation(cn.rainyak.middleware.ratelimiter.annotation.DoRateLimiter)") 定义切点，这些与我们之前的内容一样。
      */
@@ -35,6 +38,7 @@ public class DoRateLimiterPoint {
      */
     @Around("aopPoint() && @annotation(doRateLimiter)")
     public Object doRouter(ProceedingJoinPoint jp, DoRateLimiter doRateLimiter) throws Throwable {
+        logger.info("RateLimiter method");//打印日志
         IValveService valveService = new RateLimiterValve();
         return valveService.access(jp, getMetod(jp), doRateLimiter, jp.getArgs());
     }

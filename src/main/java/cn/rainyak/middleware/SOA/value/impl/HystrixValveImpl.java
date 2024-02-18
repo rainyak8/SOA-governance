@@ -8,6 +8,7 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.util.concurrent.RateLimiter;
 import com.netflix.hystrix.*;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -16,7 +17,8 @@ public class HystrixValveImpl extends HystrixCommand<Object> implements IValveSe
     private ProceedingJoinPoint jp;
     private Method method;
     private DoHystrix doHystrix;
-    public HystrixValveImpl(int time) {
+    private Object target;
+    public HystrixValveImpl(DoHystrix doHystrix) {
         /*********************************************************************************************
          * 置HystrixCommand的属性
          * GroupKey：            该命令属于哪一个组，可以帮助我们更好的组织命令。
@@ -32,7 +34,7 @@ public class HystrixValveImpl extends HystrixCommand<Object> implements IValveSe
                 .andCommandKey(HystrixCommandKey.Factory.asKey("GovernKey"))
                 .andThreadPoolKey(HystrixThreadPoolKey.Factory.asKey("GovernThreadPool"))
                 .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-                        .withExecutionTimeoutInMilliseconds(time)
+                        .withExecutionTimeoutInMilliseconds(doHystrix.timeoutValue())
                         .withExecutionIsolationStrategy(HystrixCommandProperties.ExecutionIsolationStrategy.THREAD))
                 .andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties
                         .Setter().withCoreSize(10)));
@@ -48,12 +50,12 @@ public class HystrixValveImpl extends HystrixCommand<Object> implements IValveSe
             this.doHystrix = (DoHystrix) annotation;
             this.jp = jp;
             this.method = method;
+            this.target = jp.getTarget();
 
             //设置超时时间
             HystrixCommand.Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("GovernGroup"))
                     .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
                             .withExecutionTimeoutInMilliseconds(doHystrix.timeoutValue()));
-
             return this.execute();
         } else {
             return jp.proceed();
@@ -66,17 +68,31 @@ public class HystrixValveImpl extends HystrixCommand<Object> implements IValveSe
      */
     @Override
     protected Object run() throws Exception{
-        try{
+        try {
             return jp.proceed();
-        } catch (Throwable throwable){
+        } catch (Throwable e) {
             return null;
         }
     }
     /*
-    这个getFallback方法的作用是在被拦截的方法执行失败时，返回DoHystrix注解中设置的降级结果。
+    这个getFallback方法的作用是在被拦截的方法执行失败时，返回DoHystrix注解中设置的降级方法。
      */
     @Override
     protected Object getFallback(){
-        return JSON.parseObject(doHystrix.returnJson(),method.getReturnType());
+        try {
+            // 获取备用方法的名称
+            String fallbackMethodName = doHystrix.fallbackMethod();
+
+            // 获取备用方法所在的类
+            Class<?> fallbackClass = doHystrix.fallbackClass();
+
+            // 获取备用方法
+            Method fallbackMethod = fallbackClass.getMethod(fallbackMethodName);
+
+            // 调用备用方法
+            return fallbackMethod.invoke(target);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

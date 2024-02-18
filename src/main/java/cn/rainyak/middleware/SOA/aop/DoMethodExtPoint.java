@@ -25,7 +25,7 @@ getClass(jp).getMethod(methodName, method.getParameterTypes()) 获取自定义�
 最后根据自定义方法的返回结果，如果是 true 则放行，否则返回 returnJson 中的配置结果。
  */
 @Aspect//切面
-@Component//组件
+@Component
 @Order(2)
 public class DoMethodExtPoint {
     private Logger logger = LoggerFactory.getLogger(DoMethodExtPoint.class);//日志
@@ -35,6 +35,7 @@ public class DoMethodExtPoint {
     @Around("aopPoint()")//环绕
     public Object doRouter(ProceedingJoinPoint jp) throws Throwable {//获取自定义注解中的信息，主要是拿到扩展的方法名称和返回内容。
         // 获取内容
+        logger.info("CustomMethod method");//打印日志
         Method method = getMethod(jp);
         DoMethodExt doMethodExt = method.getAnnotation(DoMethodExt.class);
         // 获取拦截方法

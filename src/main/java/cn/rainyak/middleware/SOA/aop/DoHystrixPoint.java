@@ -10,15 +10,18 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
 @Aspect//@Aspect是Spring框架中的注解，用于定义切面（Aspect）。
-@Component//Spring框架中的注解，用于将一个类标识为Spring容器的组件。
+@Component//@Component是Spring框架中的注解，用于定义组件。
 @Order(4)
 public class DoHystrixPoint {
+    private Logger logger = LoggerFactory.getLogger(DoJoinPoint.class.getName());//创建日志对象
     /*
     @Pointcut注解用于定义切点，即上面所说的那个位置。它有一个属性value，用于定义切点表达式。
     这个表达式决定了哪些方法会被AOP框架拦截。这个例子表示所有使用了DoHystrix注解的方法都会被拦截。
@@ -28,7 +31,8 @@ public class DoHystrixPoint {
     }
     @Around("aopPoint() && @annotation(doGovern)")//在切点方法周围织入代码
     public Object doRouter(ProceedingJoinPoint jp, DoHystrix doGovern) throws Throwable {
-        IValveService valveService = (IValveService) new HystrixValveImpl(doGovern.timeoutValue());
+        logger.info("hystrixPoint method");//打印日志
+        IValveService valveService = new HystrixValveImpl(doGovern);
         return valveService.access(jp, getMethod(jp), doGovern, jp.getArgs());
         /*
         access方法的作用是执行被拦截的方法，并在执行过程中应用Hystrix的熔断和降级策略。

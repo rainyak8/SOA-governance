@@ -1,1 +1,5 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=cn.rainyak.middleware.SOA.config.WhiteListAutoConfigure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+cn.rainyak.middleware.SOA.config.HystrixAutoConfigure,\
+cn.rainyak.middleware.SOA.config.WhiteListAutoConfigure,\
+cn.rainyak.middleware.SOA.config.MethodAutoConfigure,\
+cn.rainyak.middleware.SOA.config.RateLimiterConfigure

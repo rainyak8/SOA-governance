@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 
 // DoJoinPoint，是整个中间件的核心部分，它负责对所有添加自定义注解的方法进行拦截和逻辑处理。
 @Aspect//声明这是一个切面类
-@Component//@Component 注解，将类生成为 Bean 对象。
+@Component
 @Order(3)
 public class DoJoinPoint {
     private Logger logger = LoggerFactory.getLogger(DoJoinPoint.class.getName());//创建日志对象
